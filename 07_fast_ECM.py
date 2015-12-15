@@ -66,21 +66,21 @@ def run_eigenvector_centrality(population, workspace_dir):
         print '1. Nuisance COMPCOR ECM'
         run_fast_ecm(residual_compor, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm')
 
-        # print '2. Nuisance WMCSF ECM'
-        # run_fast_ecm(residual_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm')
-        #
-        # print '3. Nuisance GLOBAL ECM'
-        # run_fast_ecm(residual_global, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm')
-        #
-        # print '4. Nuisance AROMA-COMPCOR ECM'
-        # run_fast_ecm(aroma_compcor, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp')
-        #
-        # print '5. Nuisance AROMA-WMCSF ECM'
-        # run_fast_ecm(aroma_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp')
-        #
-        # print '6. Nuisance AROMA-GLOBAL ECM'
-        # run_fast_ecm(aroma_global, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp')
-        #
+        print '2. Nuisance WMCSF ECM'
+        run_fast_ecm(residual_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm')
+
+        print '3. Nuisance GLOBAL ECM'
+        run_fast_ecm(residual_global, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm')
+
+        print '4. Nuisance AROMA-COMPCOR ECM'
+        run_fast_ecm(aroma_compcor, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp')
+
+        print '5. Nuisance AROMA-WMCSF ECM'
+        run_fast_ecm(aroma_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp')
+
+        print '6. Nuisance AROMA-GLOBAL ECM'
+        run_fast_ecm(aroma_global, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp')
+
 
 
 run_eigenvector_centrality(['BM8X'], workspace_a)
