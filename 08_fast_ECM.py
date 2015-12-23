@@ -2,7 +2,7 @@ __author__ = 'kanaan 11.12.2015'
 
 import os
 from variables.subject_list import *
-from utilities.utils import *
+from utilities.utils import mkdir_path
 from utilities.nuisance import *
 from utilities.bandpass import *
 import shutil
@@ -25,6 +25,15 @@ def run_eigenvector_centrality(population, workspace_dir):
         aroma_compcor     = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp.nii.gz')
         aroma_wmcsf       = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp.nii.gz')
         aroma_global      = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp.nii.gz')
+
+        scrubbed_residual_compor   = os.path.join(subject_dir, 'FUNC_DENOISE_SCRUB/RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm_scrubbed.nii.gz')
+        scrubbed_residual_wmcsf    = os.path.join(subject_dir, 'FUNC_DENOISE_SCRUB/RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm_scrubbed.nii.gz')
+        scrubbed_residual_global   = os.path.join(subject_dir, 'FUNC_DENOISE_SCRUB/RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm_scrubbed.nii.gz')
+
+        scrubbed_aroma_compcor     = os.path.join(subject_dir, 'FUNC_DENOISE_SCRUB/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp_scrubbed.nii.gz')
+        scrubbed_aroma_wmcsf       = os.path.join(subject_dir, 'FUNC_DENOISE_SCRUB/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp_scrubbed.nii.gz')
+        scrubbed_aroma_global      = os.path.join(subject_dir, 'FUNC_DENOISE_SCRUB/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp_scrubbed.nii.gz')
+
 
         group_gm_mask     = '/SCR4/workspace/project_GluRest/OUT_DIR_A/GluConnectivity/GM2mm_bin.nii'
 
@@ -65,39 +74,48 @@ def run_eigenvector_centrality(population, workspace_dir):
 
         print '1. Nuisance COMPCOR ECM'
         run_fast_ecm(residual_compor, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm')
+        print '.'
+        run_fast_ecm(scrubbed_residual_compor, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm_scrubbed')
+        print '.'
 
+        #######################
         print '2. Nuisance WMCSF ECM'
         run_fast_ecm(residual_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm')
+        print '.'
+        run_fast_ecm(scrubbed_residual_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm_scrubbed')
+        print '.'
 
+        #######################
         print '3. Nuisance GLOBAL ECM'
         run_fast_ecm(residual_global, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm')
+        print '.'
+        run_fast_ecm(scrubbed_residual_global, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm_scrubbed')
+        print '.'
 
+        #######################
         print '4. Nuisance AROMA-COMPCOR ECM'
         run_fast_ecm(aroma_compcor, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp')
+        print '.'
+        run_fast_ecm(scrubbed_aroma_compcor, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp_scrubbed')
+        print '.'
 
+        #######################
         print '5. Nuisance AROMA-WMCSF ECM'
         run_fast_ecm(aroma_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp')
+        print '.'
+        run_fast_ecm(scrubbed_aroma_wmcsf, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp_scrubbed')
+        print '.'
 
+        #######################
         print '6. Nuisance AROMA-GLOBAL ECM'
         run_fast_ecm(aroma_global, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp')
+        print '.'
+        run_fast_ecm(scrubbed_aroma_global, group_gm_mask, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp_scrubbed')
+        print '.'
 
 
+# run_eigenvector_centrality(['BM8X'], workspace_a)
+# run_eigenvector_centrality(controls_a, workspace_a)
+# run_eigenvector_centrality(patients_a, workspace_a)
+run_eigenvector_centrality(patients_b, workspace_b)
 
-run_eigenvector_centrality(['BM8X'], workspace_a)
-
-
-
-# # # viz
-# from surfer import Brain, io
-#
-# # define stat file and freesurfer reg file
-# ecm_file = '/scr/sambesi4/workspace/project_REST/study_a/BM8X/FAST_ECM/RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm/residual_fastECM.nii'
-# reg_file = '/afs/cbs.mpg.de/software/freesurfer/5.3.0/ubuntu-precise-amd64/average/mni152.register.dat'
-#
-# #project data to fsaverage
-# surf_data = io.project_volume_data(ecm_file, "lh", reg_file)
-#
-# brain = Brain("fsaverage", "lh", "pial")
-# brain.add_data(surf_data)
-#
-# # '''
