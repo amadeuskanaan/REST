@@ -61,8 +61,6 @@ def get_distributions(population, workspace_dir):
 
 def make_quality_control_reports(population, workspace_dir):
 
-    tsnr_dist = []
-    fd_dist   = []
     for subject in population:
 
         print '###############################################################################'
@@ -87,13 +85,13 @@ def make_quality_control_reports(population, workspace_dir):
         func_mni_wm       = os.path.join(subject_dir, 'FUNC_TRANSFORM/MNI2mm_FUNC_WM.nii.gz')
         func_mni_csf      = os.path.join(subject_dir, 'FUNC_TRANSFORM/MNI2mm_FUNC_CSF.nii.gz')
 
-        residual_compor   = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm.nii.gz')
-        residual_wmcsf    = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm.nii.gz')
-        residual_global   = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm.nii.gz')
+        residual_compor   = os.path.join(subject_dir, 'FUNC_DENOISE/NUISANCE_MNI_COMPCOR/residual.nii.gz')
+        residual_wmcsf    = os.path.join(subject_dir, 'FUNC_DENOISE/NUISANCE_MNI_WMCSF/residual.nii.gz')
+        residual_global   = os.path.join(subject_dir, 'FUNC_DENOISE/NUISANCE_MNI_GLOBAL/residual.nii.gz')
 
-        aroma_compcor     = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp.nii.gz')
-        aroma_wmcsf       = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp.nii.gz')
-        aroma_global      = os.path.join(subject_dir, 'FUNC_DENOISE/RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp.nii.gz')
+        aroma_compcor     = os.path.join(subject_dir, 'FUNC_DENOISE/NUISANCE_MNI_AROMA_COMPCOR/residual.nii.gz')
+        aroma_wmcsf       = os.path.join(subject_dir, 'FUNC_DENOISE/NUISANCE_MNI_AROMA_WMCSF/residual.nii.gz')
+        aroma_global      = os.path.join(subject_dir, 'FUNC_DENOISE/NUISANCE_MNI_AROMA_GLOBAL/residual.nii.gz')
 
         movpar            = os.path.join(subject_dir,'FUNC_PPROC/MOTION_CORRECTION/REST_DISCO_MOCO_2.1D')
 
@@ -106,6 +104,9 @@ def make_quality_control_reports(population, workspace_dir):
         ################################################################################################################
         print '1. Calculating FD'
         fd = os.path.join(qcdir, 'FD.1D')
+        if not os.path.isfile(fd):
+            calc_FD_power(movpar)
+
         population_FDs = np.genfromtxt(os.path.join(workspace_dir, 'population_fd_distributions.txt'))
         if not os.path.isfile('plot_fd_qc.png'):
            plot_FD(fd, population_FDs, subject,figsize = (8.3,8.3))
@@ -122,22 +123,33 @@ def make_quality_control_reports(population, workspace_dir):
         if len(in_frames) > 150:
             in_frames_100 = in_frames[0:130]
             np.save('in_frames_100', str(in_frames_100).replace(" ",""))
-        fd_dist.append(np.mean(fd))
 
         ################################################################################################################
         print '3. Calculating DVARS'
         dvars = os.path.join(qcdir, 'DVARS.npy')
         if not os.path.isfile(dvars):
             calc_DVARS(func_native, func_native_mask)
-
+        print func_native
+        print func_native_mask
         ###############################################################################################################
         print '4. TSNR'
         #get TSNR median for whole brain
-        tsnr_data   = nb.load('./REST_PPROC_NATIVE_BRAIN_tsnr.nii.gz').get_data()
-        nan_mask    = np.logical_not(np.isnan(tsnr_data))
-        mask        = nb.load(func_native_mask).get_data() > 0
-        tsnr_median = np.median(tsnr_data[np.logical_and(nan_mask, mask)])
-        tsnr_dist.append(tsnr_median)
+        if not os.path.isfile(os.path.join(qcdir, 'REST_PPROC_NATIVE_BRAIN_tsnr.nii.gz')):
+            tsnr = TSNR()
+            tsnr.inputs.in_file = func_native
+            tsnr.run()
+
+        if not os.path.isfile('TSNR_data.npy'):
+            tsnr_data   = nb.load('./REST_PPROC_NATIVE_BRAIN_tsnr.nii.gz').get_data()
+            nan_mask    = np.logical_not(np.isnan(tsnr_data))
+            mask        = nb.load(func_native_mask).get_data() > 0
+            #tsnr_median = np.median(tsnr_data[np.logical_and(nan_mask, mask)])
+            data        = tsnr_data[np.logical_and(nan_mask, mask)]
+            tsnr_out    = os.path.join(os.getcwd(), 'TSNR_data.npy')
+            np.save(tsnr_out, data)
+
+        tsnr_median =  np.median(np.load('TSNR_data.npy'))
+        print '-->',tsnr_median
 
         if not os.path.isfile(' plot_tsnr_mosaic.png'):
             plot_mosaic(nifti_file  = './REST_PPROC_NATIVE_BRAIN_tsnr.nii.gz',
@@ -158,17 +170,17 @@ def make_quality_control_reports(population, workspace_dir):
                                        figsize=(11.7,8.3),
                                        outname = 'plot_tsnr_brain_distribution.png')
 
-        d = plotting.plot_epi(func_native_mean, cmap='gray', display_mode='y', black_bg= 1, annotate=0)
-        d.add_contours(func_native_mask, colors='r')
-        d.savefig('plot_func_native_mask_y.png', dpi = 130)
+            d = plotting.plot_epi(func_native_mean, cmap='gray', display_mode='y', black_bg= 1, annotate=0)
+            d.add_contours(func_native_mask, colors='r')
+            d.savefig('plot_func_native_mask_y.png', dpi = 130)
 
-        d = plotting.plot_epi(func_native_mean, cmap='gray', display_mode='x', black_bg= 1, annotate=0)
-        d.add_contours(func_native_mask, colors='r')
-        d.savefig('plot_func_native_mask_x.png', dpi = 110)
+            d = plotting.plot_epi(func_native_mean, cmap='gray', display_mode='x', black_bg= 1, annotate=0)
+            d.add_contours(func_native_mask, colors='r')
+            d.savefig('plot_func_native_mask_x.png', dpi = 110)
 
-        d = plotting.plot_epi(func_native_mean, cmap='gray', display_mode='z', black_bg= 1, annotate=0)
-        d.add_contours(func_native_mask, colors='r')
-        d.savefig('plot_func_native_mask_z.png', dpi = 130)
+            d = plotting.plot_epi(func_native_mean, cmap='gray', display_mode='z', black_bg= 1, annotate=0)
+            d.add_contours(func_native_mask, colors='r')
+            d.savefig('plot_func_native_mask_z.png', dpi = 130)
 
         # subcortical plots
         if not os.path.isfile('plot_tsnr_first_distribution.png'):
@@ -178,7 +190,8 @@ def make_quality_control_reports(population, workspace_dir):
                                        distribution =  np.genfromtxt(os.path.join(workspace_dir, 'population_tsnr_first_distributions.txt')),
                                        xlabel2      = "%s median subcortical tSNR with respect to all subjects"%subject,
                                        figsize      =(11.7,8.3),
-                                       outname = 'plot_tsnr_first_distribution.png')
+                                       outname      = 'plot_tsnr_first_distribution.png',
+                                       color        = 'green')
 
             plot_3d_overlay(underlay_file=func_native_mean, overlay_file=func_native_first, out_filename='plot_subcortical_mask.png', dpi = 215)
 
@@ -208,7 +221,7 @@ def make_quality_control_reports(population, workspace_dir):
                         figsize=(8.3, 11.7))
             os.system('convert -density 300 -trim plot_func_native_gm.pdf -quality 300 -sharpen 0x1.0 -crop 2506x2570+1+470 plot_func_native_gm.png')
 
-        #
+
         ################################################################################################################
         print '7. Plot Nuisance Residuals'
 
@@ -284,6 +297,15 @@ def make_quality_control_reports(population, workspace_dir):
         report.drawImage('plot_func_native_mask_y.png', inch*2.5, inch*21)
         report.drawImage('plot_func_native_mask_x.png', inch*2.5, inch*25)
         report.drawImage('plot_tsnr_brain_distribution.png', inch*3.5, inch*1.7)
+
+        brain_tsnr = get_values_inside_a_mask('REST_PPROC_NATIVE_BRAIN_tsnr.nii.gz', func_native_mask)
+        tsnr_brain_check_outlier = get_outlier(brain_tsnr, np.genfromtxt(os.path.join(workspace_dir, 'population_tsnr_distributions.txt')) )
+        if tsnr_brain_check_outlier is 'Accepted':
+            report.setFillColorRGB(0,180,0)
+        else:
+             report.setFillColorRGB(250,0,0)
+        report.setFont("Helvetica", 50)
+        report.drawString(inch*6, inch*10, tsnr_brain_check_outlier)
         report.showPage()
 
         report.setFont("Helvetica", 30)
@@ -292,18 +314,52 @@ def make_quality_control_reports(population, workspace_dir):
         report.drawString(inch*12, inch*38.5, 'Func FIRST Subcortical Mask')
         report.drawImage('plot_subcortical_mask.png', inch*7, inch*20)
         report.drawImage('plot_tsnr_first_distribution.png', inch*3, inch*2)
+
+        first_tsnr  = get_values_inside_a_mask('REST_PPROC_NATIVE_BRAIN_tsnr.nii.gz', func_native_first)
+        tsnr_first_check_outlier = get_outlier(first_tsnr, np.genfromtxt(os.path.join(workspace_dir, 'population_tsnr_distributions.txt')) )
+        if tsnr_first_check_outlier is 'Accepted':
+            report.setFillColorRGB(0,180,0)
+        else:
+             report.setFillColorRGB(250,0,0)
+        report.setFont("Helvetica", 50)
+        report.drawString(inch*6, inch*10, tsnr_first_check_outlier)
         report.showPage()
 
         report.setFont("Helvetica", 30)
         report.drawString(inch*31, inch*40, '%s'%subject)
         report.drawImage('plot_nuisance.png', inch*3, inch*2)
         report.drawImage('plot_fd_qc.png', inch*3, inch*20)
+
+        fd_check_outlier = get_outlier(fd1d, np.genfromtxt(os.path.join(workspace_dir, 'population_fd_distributions.txt')))
+        if fd_check_outlier is 'Accepted':
+            report.setFillColorRGB(0,180,0)
+        else:
+             report.setFillColorRGB(250,0,0)
+        report.setFont("Helvetica", 50)
+        report.drawString(inch*25, inch*27.5, fd_check_outlier)
         report.showPage()
         report.save()
 
+
 def create_population_qc_spearsheet(population, workspace):
-    print ''
+    all_dfs = []
+    for subject in population:
+        df_subject = pd.read_csv(os.path.join(workspace, subject, 'QUALITY_CONTROL/quality_paramters.csv'), index_col = 0)
+        qc_report  = os.path.join(os.path.join(workspace, subject, 'QUALITY_CONTROL/QC_REPORT.pdf'))
+        df_subject['QC_REPORT'] = qc_report
+        all_dfs.append(df_subject)
+    df = pd.concat(all_dfs)
+    df.to_csv(os.path.join(workspace, 'POPULATION_QC_REPORT.csv'))
+    print os.path.join(workspace, 'POPULATION_QC_REPORT.csv')
 
 # get_distributions(controls_a + patients_a , workspace_a)
 # get_distributions(patients_b , workspace_b)
-make_quality_control_reports(['BM8X'], workspace_a)
+
+make_quality_control_reports(['EB2P', 'CM5P'], workspace_a)
+# make_quality_control_reports(controls_a, workspace_a)
+# make_quality_control_reports(patients_a, workspace_a)
+#make_quality_control_reports(patients_b, workspace_b)
+
+
+# create_population_qc_spearsheet(controls_a + patients_a, workspace_a)
+

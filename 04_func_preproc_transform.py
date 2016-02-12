@@ -7,7 +7,7 @@ import shutil
 import nipype.interfaces.ants as ants
 
 
-def run_functional_transform(population, datadir, workspace_dir):
+def run_functional_transform(population, datadir, workspace_dir, freesurfer_dir):
 
     for subject in population:
         print '###############################################################################'
@@ -139,11 +139,20 @@ def run_functional_transform(population, datadir, workspace_dir):
             os.system('fslmaths NACC_l -add CAUDATE_l -add PALLIDUM_l -add PUTAMEN_l -add THALAMUS_l -add THALAMUS_l -bin left_subcortical')
             os.system('fslmaths NACC_r -add CAUDATE_r -add PALLIDUM_r -add PUTAMEN_r -add THALAMUS_r -add THALAMUS_r -bin right_subcortical')
             os.system('fslmaths left_subcortical -add right_subcortical -bin subcortical')
-            os.system('flirt -in subcortical.nii.gz -ref %s -out SUBCORTICAL_FUNC.nii.gz -applyxfm -init ANAT2FUNC_XFM.mat'%func_pproc_mean,)
+            os.system('flirt -in subcortical.nii.gz -ref %s -out SUBCORTICAL_FUNC.nii.gz -applyxfm -init ANAT2FUNC_XFM.mat'%func_pproc_mean)
             os.system('fslmaths SUBCORTICAL_FUNC.nii.gz -thr 0.3 -bin ../NATIVE_FUNC_FIRST.nii.gz')
 
+            # os.system('flirt -in PUTAMEN_l.nii.gz -ref %s -out func_PUTAMEN_l.nii.gz -applyxfm -init ANAT2FUNC_XFM.mat'%func_pproc_mean,)
+            # os.system('flirt -in CAUDATE_l.nii.gz -ref %s -out func_CAUDATE_l.nii.gz -applyxfm -init ANAT2FUNC_XFM.mat'%func_pproc_mean,)
+            # os.system('flirt -in PALLIDUM_l.nii.gz -ref %s -out func_PALLIDUM_l.nii.gz -applyxfm -init ANAT2FUNC_XFM.mat'%func_pproc_mean,)
+            # os.system('flirt -in THALAMUS_l.nii.gz -ref %s -out func_THALAMUS_l.nii.gz -applyxfm -init ANAT2FUNC_XFM.mat'%func_pproc_mean,)
+            #
+            # os.system('fslmaths func_PUTAMEN_l.nii.gz -thr 0.3 -fillh -bin ../NATIVE_FUNC_PUTAMEN_L.nii.gz')
+            # os.system('fslmaths func_CAUDATE_l.nii.gz -thr 0.3 -fillh -bin ../NATIVE_FUNC_CAUDATE_L.nii.gz')
+            # os.system('fslmaths func_PALLIDUM_l.nii.gz -thr 0.3 -fillh -bin ../NATIVE_FUNC_PALLIDUM_L.nii.gz')
+
         ############################################################################################################
-        # ANAT MASKS to MNI NATIVE
+        # ANAT MASKS to MNI
         os.chdir(func2mni_dir)
         print '.....Transforming anatomical masks to MNI_2mm space'
         if not os.path.isfile('../MNI2mm_FUNC_GM.nii.gz'):
@@ -159,8 +168,52 @@ def run_functional_transform(population, datadir, workspace_dir):
             os.system('WarpImageMultiTransform 3 ../FUNC2ANAT/subcortical.nii.gz MNI2mm_SUBCORTICAL.nii.gz -R %s %s %s'%(mni_brain_2mm, warp, affine))
             os.system('fslmaths MNI2mm_SUBCORTICAL.nii.gz -mul ../REST_PPROC_MNI2mm_BRAIN_mask_ero.nii.gz  -bin ../MNI2mm_FUNC_FIRST.nii.gz')
 
+        if not os.path.isfile('../MNI2mm_FUNC_THALAMUS_L.nii.gz'):
+            os.system('WarpImageMultiTransform 3 ../FUNC2ANAT/PUTAMEN_l.nii.gz MNI2mm_PUTAMEN_L.nii.gz -R %s %s %s'%(mni_brain_2mm, warp, affine))
+            os.system('fslmaths MNI2mm_PUTAMEN_L.nii.gz -mul ../REST_PPROC_MNI2mm_BRAIN_mask_ero.nii.gz  -fillh -bin ../MNI2mm_FUNC_PUTAMEN_L.nii.gz')
 
-run_functional_transform(['BM8X'], controls_datadir_a, workspace_a)
-run_functional_transform(controls_a, controls_datadir_a, workspace_a)
-run_functional_transform(patients_a, patients_datadir_a, workspace_a)
-run_functional_transform(patients_b, patients_datadir_b, workspace_b)
+            os.system('WarpImageMultiTransform 3 ../FUNC2ANAT/CAUDATE_l.nii.gz MNI2mm_CAUDATE_L.nii.gz -R %s %s %s'%(mni_brain_2mm, warp, affine))
+            os.system('fslmaths MNI2mm_CAUDATE_L.nii.gz -mul ../REST_PPROC_MNI2mm_BRAIN_mask_ero.nii.gz  -fillh -bin ../MNI2mm_FUNC_CAUDATE_L.nii.gz')
+
+            os.system('WarpImageMultiTransform 3 ../FUNC2ANAT/PALLIDUM_l.nii.gz MNI2mm_PALLIDUM_L.nii.gz -R %s %s %s'%(mni_brain_2mm, warp, affine))
+            os.system('fslmaths MNI2mm_PALLIDUM_L.nii.gz -mul ../REST_PPROC_MNI2mm_BRAIN_mask_ero.nii.gz  -fillh -bin ../MNI2mm_FUNC_PALLIDUM_L.nii.gz')
+
+            os.system('WarpImageMultiTransform 3 ../FUNC2ANAT/THALAMUS_l.nii.gz MNI2mm_THALAMUS_L.nii.gz -R %s %s %s'%(mni_brain_2mm, warp, affine))
+            os.system('fslmaths MNI2mm_THALAMUS_L.nii.gz -mul ../REST_PPROC_MNI2mm_BRAIN_mask_ero.nii.gz  -fillh -bin ../MNI2mm_FUNC_THALAMUS_L.nii.gz')
+
+        ############################################################################################################
+        # FREESURFER MASKS to MNI
+        freesurfer_mask_dir =  os.path.join(subject_dir, 'FUNC_TRANSFORM/FREESURFER_MASKS')
+        mkdir_path(freesurfer_mask_dir)
+        os.chdir(freesurfer_mask_dir)
+
+        os.system('export SUBJECTS_DIR=%s'%(freesurfer_dir))
+
+        mgz_t1  = os.path.join(freesurfer_dir, subject, 'mri', 'T1.mgz')
+        mgz_seg = os.path.join(freesurfer_dir, subject, 'mri', 'aparc.a2009s+aseg.mgz')
+
+        if not os.path.isfile('freesufer_2_native_space.mat'):
+            #Convert freesurfer images to nifti rpi
+            os.system('mri_convert %s freesurfer_aparc_aseg.nii.gz'%mgz_seg)
+            os.system('mri_convert %s freesurfer_T1.nii.gz'%mgz_t1)
+            os.system('fslswapdim freesurfer_aparc_aseg.nii.gz RL PA IS freesurfer_aparc_aseg_rpi.nii.gz')
+            os.system('fslswapdim freesurfer_T1.nii.gz RL PA IS freesurfer_T1_rpi.nii.gz')
+
+            # Register freesurfer T1/seg to MP2RAGE native space
+            os.system('flirt -in freesurfer_T1_rpi.nii.gz -ref %s -omat freesufer_2_native_space.mat -dof 6 -out freesurfer_t1_native_space -cost mutualinfo' %anat)
+
+        if not os.path.isfile('../MNI2mm_FUNC_INSULA_LA.nii.gz'):
+            # Extract seg labels and transform to MNI space
+            os.system('fslmaths freesurfer_aparc_aseg_rpi.nii.gz -thr 11148 -uthr 11148 -dilM -bin freesurfer_insula_anterior_left_rpi.nii.gz')
+            os.system('flirt -in freesurfer_insula_anterior_left_rpi.nii.gz -ref %s -init freesufer_2_native_space.mat -applyxfm -out freesurfer_insula_anterior_left_rpi_native_space.nii.gz' %anat)
+
+            #transform to MNI space
+            os.system('WarpImageMultiTransform 3 freesurfer_insula_anterior_left_rpi_native_space.nii.gz MNI2mm_INSULA_anterior_left.nii.gz -R %s %s %s'%(mni_brain_2mm, warp, affine))
+            os.system('fslmaths MNI2mm_INSULA_anterior_left.nii.gz -thr 0.5 -bin ../MNI2mm_FUNC_INSULA_LA.nii.gz')
+
+
+
+run_functional_transform(['HCTT'], controls_datadir_a, workspace_a, freesurfer_dir_a)
+# run_functional_transform(controls_a, controls_datadir_a, workspace_a, freesurfer_dir_a)
+# run_functional_transform(patients_a, patients_datadir_a, workspace_a, freesurfer_dir_a)
+# run_functional_transform(patients_b, patients_datadir_b, workspace_b, freesurfer_dir_b)

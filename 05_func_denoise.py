@@ -86,6 +86,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
                 #warp tp native space
                 os.system('WarpImageMultiTransform 3 %s HO_CSF_ANAT.nii.gz -R %s -i %s %s'
                           %(mni_lateral_ventricles, anat_native, anat2mni_aff, anat2mni_wrp))
+		print func_native_mean
+		print  anat2func_aff
                 os.system('flirt -in HO_CSF_ANAT.nii.gz -ref %s -applyxfm -init %s -out HO_CSF_NATIVE'
                           %(func_native_mean, anat2func_aff))
                 os.system('fslmaths HO_CSF_NATIVE.nii.gz -thr 0.5 -bin  HO_CSF_NATIVE_BIN')
@@ -314,15 +316,13 @@ def run_functional_denoising(population, datadir, workspace_dir):
                            motion_file = friston, compcor_ncomponents = 5)
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            # bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('cp bandpassed_demeaned_filtered.nii.gz ../RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp.nii.gz')
 
-#run_functional_denoising(['BM8X'], controls_datadir_a, workspace_a)
-#run_functional_denoising(controls_a, controls_datadir_a, workspace_a)
-# run_functional_denoising(controls_a[20:30], controls_datadir_a, workspace_a)
-# run_functional_denoising(controls_a[30:], controls_datadir_a, workspace_a)
-# run_functional_denoising(patients_a[20:30], patients_datadir_a, workspace_a)
-run_functional_denoising(patients_a[30:], patients_datadir_a, workspace_a)
-# run_functional_denoising(patients_b, patients_datadir_b, workspace_b)
-
+# run_functional_denoising([ 'EB2P'], controls_datadir_a, workspace_a)
+run_functional_denoising(controls_a, controls_datadir_a, workspace_a)
+run_functional_denoising(patients_a, patients_datadir_a, workspace_a)
+run_functional_denoising(patients_b, patients_datadir_b, workspace_b)
+#

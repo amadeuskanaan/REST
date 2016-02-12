@@ -158,7 +158,8 @@ def run_functional_preprocessing(population, datadir, workspace_dir):
             os.system('3dTstat -mean -prefix REST_PPROC_NATIVE_BRAIN_mean.nii.gz  REST_PPROC_NATIVE_BRAIN.nii.gz ')
             os.system('fslmaths REST_PPROC_NATIVE_BRAIN_mask.nii.gz -ero -ero REST_PPROC_NATIVE_BRAIN_mask_ero.nii.gz')
 
-#run_functional_preprocessing(['EW3P'], patients_datadir_a, workspace_a)
+# run_functional_preprocessing(['EB2P'], patients_datadir_a, workspace_a)
 run_functional_preprocessing(controls_a, controls_datadir_a, workspace_a)
 run_functional_preprocessing(patients_a, patients_datadir_a, workspace_a)
 run_functional_preprocessing(patients_b, patients_datadir_b, workspace_b)
+#
