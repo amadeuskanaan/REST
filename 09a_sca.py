@@ -123,6 +123,6 @@ def run_seed_based_correlation(population, workspace_dir):
         run_sca(scrub_aroma_global, first, 'FIRST', 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp_scrubbed')
 
 
-# run_seed_based_correlation(controls_a, workspace_a)
-# run_seed_based_correlation(patients_a, workspace_a)
-run_seed_based_correlation(patients_b, workspace_b)
+#run_seed_based_correlation(controls_a, workspace_a)
+#run_seed_based_correlation(patients_a, workspace_a)
+run_seed_based_correlation(patients_b_qc, workspace_b)

@@ -41,18 +41,6 @@ def run_functional_denoising(population, datadir, workspace_dir):
 
 
         #######################################################################################
-        # # Constrict Brain
-        # print 'Constrcting FUNC native brain'
-        # os.chdir(os.path.join(subject_dir, 'FUNC_PPROC'))
-        # if not os.path.isfile('REST_PPROC_NATIVE_BRAIN_ero.nii.gz'):
-        #     os.system('fslmaths %s -mas %s REST_PPROC_NATIVE_BRAIN_ero.nii.gz'%(func_native, func_native_mask))
-        #
-        # print 'Constrcting Func MNI brain'
-        # os.chdir(os.path.join(subject_dir, 'FUNC_TRANSFORM'))
-        # if not os.path.isfile('REST_PPROC_MNI2mm_BRAIN_ero.nii.gz'):
-        #     os.system('fslmaths %s -mas %s REST_PPROC_MNI2mm_BRAIN_ero.nii.gz'%(func_mni, func_mni_mask))
-
-        #######################################################################################
         #output
         denoise_dir =  os.path.join(subject_dir, 'FUNC_DENOISE')
         mkdir_path(denoise_dir)
@@ -70,14 +58,19 @@ def run_functional_denoising(population, datadir, workspace_dir):
         #Extract Tissue Data
         print 'A. Native Func Nuisance Signal Regression'
         print '... Extracting Tissue mask Signals from native brain'
-	print ''
+        print ''
         native_tissuesig_dir =  os.path.join(subject_dir, 'FUNC_DENOISE/TISSUE_SIGNALS_NATIVE')
         mkdir_path(native_tissuesig_dir)
         os.chdir(native_tissuesig_dir)
 
+        #Erode WM
+        os.system('fslmaths %s -ero native_WM_ero.nii.gz'%func_native_wm)
+        func_native_wm = os.path.join(native_tissuesig_dir, 'native_WM_ero.nii.gz')
+
         native_wm_sig  = os.path.join(native_tissuesig_dir, 'NUISANCE_SIGNALS_WM.npy')
         native_gm_sig  = os.path.join(native_tissuesig_dir, 'NUISANCE_SIGNALS_GM.npy')
         native_csf_sig = os.path.join(native_tissuesig_dir, 'NUISANCE_SIGNALS_CSF.npy')
+
 
         # LIMIT CSF to ventricles
         if not os.path.isfile(native_gm_sig):
@@ -86,8 +79,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
                 #warp tp native space
                 os.system('WarpImageMultiTransform 3 %s HO_CSF_ANAT.nii.gz -R %s -i %s %s'
                           %(mni_lateral_ventricles, anat_native, anat2mni_aff, anat2mni_wrp))
-		print func_native_mean
-		print  anat2func_aff
+                print func_native_mean
+                print  anat2func_aff
                 os.system('flirt -in HO_CSF_ANAT.nii.gz -ref %s -applyxfm -init %s -out HO_CSF_NATIVE'
                           %(func_native_mean, anat2func_aff))
                 os.system('fslmaths HO_CSF_NATIVE.nii.gz -thr 0.5 -bin  HO_CSF_NATIVE_BIN')
@@ -115,7 +108,9 @@ def run_functional_denoising(population, datadir, workspace_dir):
                            motion_file = friston, compcor_ncomponents = 5)
         print ' Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_NATIVE_detrend_compcor_friston_bp_fwhm.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            #bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
+
             # Smooth data
             os.system('fslmaths bandpassed_demeaned_filtered.nii.gz -kernel gauss 1.698644 -fmean ../RESIDUAL_NATIVE_detrend_compcor_friston_bp_fwhm.nii.gz')
 
@@ -133,7 +128,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
                            motion_file  = friston, compcor_ncomponents = 5)
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_NATIVE_detrend_wmcsf_friston_bp_fwhm.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            #bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('fslmaths bandpassed_demeaned_filtered.nii.gz -kernel gauss 1.698644 -fmean ../RESIDUAL_NATIVE_detrend_wmcsf_friston_bp_fwhm.nii.gz')
 
@@ -151,12 +147,11 @@ def run_functional_denoising(population, datadir, workspace_dir):
                            motion_file  = friston, compcor_ncomponents = 5)
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_NATIVE_detrend_global_wmcsf_friston_bp_fwhm.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            #bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('fslmaths bandpassed_demeaned_filtered.nii.gz -kernel gauss 1.698644 -fmean ../RESIDUAL_NATIVE_detrend_global_wmcsf_friston_bp_fwhm.nii.gz')
 
-        ################################################################################################################
-        ################################################################################################################
         ################################################################################################################
         ################################################################################################################
 
@@ -169,6 +164,10 @@ def run_functional_denoising(population, datadir, workspace_dir):
         TISSUESIGNAL_DIR_MNI =  os.path.join(subject_dir, 'FUNC_DENOISE/TISSUE_SIGNALS_MNI')
         mkdir_path(TISSUESIGNAL_DIR_MNI)
         os.chdir(TISSUESIGNAL_DIR_MNI)
+
+        #Erode WM
+        os.system('fslmaths %s -ero mni_WM_ero.nii.gz'%func_mni_wm)
+        func_native_wm = os.path.join(TISSUESIGNAL_DIR_MNI, 'mni_WM_ero.nii.gz')
 
         mni_wm_sig  = os.path.join(TISSUESIGNAL_DIR_MNI, 'NUISANCE_SIGNALS_WM.npy')
         mni_gm_sig  = os.path.join(TISSUESIGNAL_DIR_MNI, 'NUISANCE_SIGNALS_GM.npy')
@@ -197,7 +196,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
                            motion_file = friston, compcor_ncomponents = 5)
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            #bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('fslmaths bandpassed_demeaned_filtered.nii.gz -kernel gauss 1.698644 -fmean ../RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm.nii.gz')
 
@@ -214,7 +214,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
                            motion_file = friston, compcor_ncomponents = 5)
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            # bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('fslmaths bandpassed_demeaned_filtered.nii.gz -kernel gauss 1.698644 -fmean ../RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm.nii.gz')
 
@@ -234,7 +235,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
         # BP filter
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            # bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('fslmaths bandpassed_demeaned_filtered.nii.gz -kernel gauss 1.698644 -fmean ../RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm.nii.gz')
 
@@ -279,7 +281,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
         
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            # bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('cp bandpassed_demeaned_filtered.nii.gz ../RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp.nii.gz')
         
@@ -298,7 +301,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
                            motion_file = friston, compcor_ncomponents = 5)
         print '     Filtering and Smoothing FWHM=4'
         if not os.path.isfile('../RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp.nii.gz'):
-            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            # bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.001,0.01), sample_period = None)
+            bandpass_voxels(realigned_file= './residual.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
             # Smooth data
             os.system('cp bandpassed_demeaned_filtered.nii.gz ../RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp.nii.gz')
 
@@ -321,8 +325,8 @@ def run_functional_denoising(population, datadir, workspace_dir):
             # Smooth data
             os.system('cp bandpassed_demeaned_filtered.nii.gz ../RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp.nii.gz')
 
-# run_functional_denoising([ 'EB2P'], controls_datadir_a, workspace_a)
-run_functional_denoising(controls_a, controls_datadir_a, workspace_a)
+# run_functional_denoising(['HR8T'], controls_datadir_a, workspace_a)
+# run_functional_denoising(controls_a, controls_datadir_a, workspace_a)
 run_functional_denoising(patients_a, patients_datadir_a, workspace_a)
-run_functional_denoising(patients_b, patients_datadir_b, workspace_b)
-#
+# run_functional_denoising(patients_b, patients_datadir_b, workspace_b)
+

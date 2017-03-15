@@ -23,7 +23,7 @@ def run_functional_preprocessing(population, datadir, workspace_dir):
         rest_rl     =  os.path.join(datadir, subject, 'NIFTI', 'REST_SE.nii')
         rest_lr     =  os.path.join(datadir, subject, 'NIFTI', 'REST_SE_INVPOL.nii')
 
-         #output
+        #output
         func_dir =  os.path.join(workspace_dir, subject, 'FUNC_PPROC')
         mkdir_path(func_dir)
         os.chdir(func_dir)
@@ -34,8 +34,6 @@ def run_functional_preprocessing(population, datadir, workspace_dir):
 
         print '.....Reorienting Data'
         if not os.path.isfile(os.path.join(func_dir, 'REST_DROP_RPI.nii.gz' )):
-
-
             # Deoblique data
             shutil.copy(rest, os.path.join(func_dir, 'REST.nii'))
             shutil.copy(rest_rl, os.path.join(func_dir, 'REST_SE.nii'))
@@ -158,8 +156,7 @@ def run_functional_preprocessing(population, datadir, workspace_dir):
             os.system('3dTstat -mean -prefix REST_PPROC_NATIVE_BRAIN_mean.nii.gz  REST_PPROC_NATIVE_BRAIN.nii.gz ')
             os.system('fslmaths REST_PPROC_NATIVE_BRAIN_mask.nii.gz -ero -ero REST_PPROC_NATIVE_BRAIN_mask_ero.nii.gz')
 
-# run_functional_preprocessing(['EB2P'], patients_datadir_a, workspace_a)
-run_functional_preprocessing(controls_a, controls_datadir_a, workspace_a)
-run_functional_preprocessing(patients_a, patients_datadir_a, workspace_a)
-run_functional_preprocessing(patients_b, patients_datadir_b, workspace_b)
-#
+run_functional_preprocessing(['HCTT'], controls_datadir_a, workspace_a)
+#run_functional_preprocessing(controls_a, controls_datadir_a, workspace_a)
+#run_functional_preprocessing(patients_a, patients_datadir_a, workspace_a)
+#run_functional_preprocessing(patients_b, patients_datadir_b, workspace_b)

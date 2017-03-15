@@ -5,6 +5,8 @@ from variables.subject_list import *
 from utilities.utils import *
 import shutil
 import nipype.interfaces.ants as ants
+from utilities.bandpass import  *
+
 
 
 def run_functional_transform(population, datadir, workspace_dir, freesurfer_dir):
@@ -97,6 +99,15 @@ def run_functional_transform(population, datadir, workspace_dir, freesurfer_dir)
             os.system('bet REST_PPROC_MNI2mm.nii.gz REST_PPROC_MNI2mm_BRAIN.nii.gz -f 0.50 -F -m -t -g 0.00')
             os.system('3dTstat -mean -prefix REST_PPROC_MNI2mm_BRAIN_mean.nii.gz  REST_PPROC_MNI2mm_BRAIN.nii.gz ')
             os.system('fslmaths REST_PPROC_MNI2mm_BRAIN_mask.nii.gz -ero -ero REST_PPROC_MNI2mm_BRAIN_mask_ero.nii.gz')
+
+        ############### CREATING PPRC IMAGE READY FOR RESOURCE ALLOCATION INDEX COMPUTATION
+        print '.....Creating pproc/warped image ready for ICA '
+        # ica ready file
+        if not os.path.isfile('ICAready_REST_PPROC_MNI2mm_fwhm_bp.nii.gz'):
+            # Smoothing and bp
+            os.system('fslmaths FUNC2MNI/REST_PPROC_MNI2mm.nii -kernel gauss 1.698644 -fmean ICAready_REST_PPROC_MNI2mm_fwhm.nii.gz')
+            bandpass_voxels(realigned_file= 'ICAready_REST_PPROC_MNI2mm_fwhm.nii.gz', bandpass_freqs= (0.008,0.1), sample_period = None)
+            os.system('cp bandpassed_demeaned_filtered.nii.gz ICAready_REST_PPROC_MNI2mm_fwhm_bp.nii.gz')
 
 
         ############################################################################################################
@@ -213,7 +224,7 @@ def run_functional_transform(population, datadir, workspace_dir, freesurfer_dir)
 
 
 
-run_functional_transform(['HCTT'], controls_datadir_a, workspace_a, freesurfer_dir_a)
-# run_functional_transform(controls_a, controls_datadir_a, workspace_a, freesurfer_dir_a)
-# run_functional_transform(patients_a, patients_datadir_a, workspace_a, freesurfer_dir_a)
-# run_functional_transform(patients_b, patients_datadir_b, workspace_b, freesurfer_dir_b)
+run_functional_transform(['HR8T'], controls_datadir_a, workspace_a, freesurfer_dir_a)
+#run_functional_transform(controls_a, controls_datadir_a, workspace_a, freesurfer_dir_a)
+#run_functional_transform(patients_a, patients_datadir_a, workspace_a, freesurfer_dir_a)
+#run_functional_transform(patients_b, patients_datadir_b, workspace_b, freesurfer_dir_b)

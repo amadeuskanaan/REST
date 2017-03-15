@@ -15,7 +15,7 @@ def run_randomise_baseline(population_1, population_2, workspace_dir):
 
     print '#######################################'
 
-    for string in ecm_strings:
+    for string in resid_strings:
         print 'Running FSL-randomise on  ECM maps = %s'%string[16:]
         print ''
         ecm_list_1 = []

@@ -39,38 +39,39 @@ def run_eigenvector_centrality(population, workspace_dir):
 
 
         def run_fast_ecm(nuisance_file, gm_mask, string):
-            if not os.path.isfile(os.path.join(subject_dir, 'FAST_ECM',string, 'zscore_fastECM.nii.gz')):
-                #create output dir
-                dir =  os.path.join(subject_dir,'FAST_ECM', string)
-                mkdir_path(dir)
-                os.chdir(dir)
+            if os.path.isfile(nuisance_file):
+                if not os.path.isfile(os.path.join(subject_dir, 'FAST_ECM',string, 'zscore_fastECM.nii.gz')):
+                    #create output dir
+                    dir =  os.path.join(subject_dir,'FAST_ECM', string)
+                    mkdir_path(dir)
+                    os.chdir(dir)
 
-                #copy nuisance file locally
-                shutil.copy(nuisance_file, './residual.nii.gz')
+                    #copy nuisance file locally
+                    shutil.copy(nuisance_file, './residual.nii.gz')
 
-                #gunzip
-                if not os.path.isfile('residual.nii'):
-                    os.system('gunzip residual.nii.gz')
-                    os.system('rm -rf residual.nii.gz')
+                    #gunzip
+                    if not os.path.isfile('residual.nii'):
+                        os.system('gunzip residual.nii.gz')
+                        os.system('rm -rf residual.nii.gz')
 
-                # run Fast ECM
-                pproc = os.path.join(dir, 'residual.nii')
-                matlab_cmd = ['matlab',  '-version', '8.2', '-nodesktop' ,'-nosplash'  ,'-nojvm' ,'-r "fastECM(\'%s\', \'1\', \'1\', \'1\', \'20\', \'%s\') ; quit;"' %(pproc, gm_mask)]
-                print '    ... Running ECM'
-                subprocess.call(matlab_cmd)
+                    # run Fast ECM
+                    pproc = os.path.join(dir, 'residual.nii')
+                    matlab_cmd = ['matlab',  '-version', '8.2', '-nodesktop' ,'-nosplash'  ,'-nojvm' ,'-r "fastECM(\'%s\', \'1\', \'1\', \'1\', \'20\', \'%s\') ; quit;"' %(pproc, gm_mask)]
+                    print '    ... Running ECM'
+                    subprocess.call(matlab_cmd)
 
-                def z_score_centrality(image, outname):
+                    def z_score_centrality(image, outname):
 
-                    print '    ... z-scoring %s'%outname
-                    # zscore fastECM image
-                    std  = commands.getoutput('fslstats %s -k %s -s | awk \'{print $1}\''%(image, group_gm_mask))
-                    mean = commands.getoutput('fslstats %s -k %s -m | awk \'{print $1}\''%(image, group_gm_mask))
-                    os.system('fslmaths %s -sub %s -div %s -mas %s %s'%(image, mean, std, group_gm_mask, outname))
+                        print '    ... z-scoring %s'%outname
+                        # zscore fastECM image
+                        std  = commands.getoutput('fslstats %s -k %s -s | awk \'{print $1}\''%(image, group_gm_mask))
+                        mean = commands.getoutput('fslstats %s -k %s -m | awk \'{print $1}\''%(image, group_gm_mask))
+                        os.system('fslmaths %s -sub %s -div %s -mas %s %s'%(image, mean, std, group_gm_mask, outname))
 
-                z_score_centrality('residual_fastECM.nii', 'zscore_fastECM')
-                z_score_centrality('residual_degCM.nii'  , 'zscore_degCM')
-                z_score_centrality('residual_normECM.nii', 'zscore_normECM')
-                z_score_centrality('residual_rankECM.nii', 'zscore_rankECM')
+                    z_score_centrality('residual_fastECM.nii', 'zscore_fastECM')
+                    z_score_centrality('residual_degCM.nii'  , 'zscore_degCM')
+                    z_score_centrality('residual_normECM.nii', 'zscore_normECM')
+                    z_score_centrality('residual_rankECM.nii', 'zscore_rankECM')
 
         print '1. Nuisance COMPCOR ECM'
         run_fast_ecm(residual_compor, group_gm_mask, 'RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm')

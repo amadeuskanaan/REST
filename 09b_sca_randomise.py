@@ -53,7 +53,7 @@ def run_randomise_sca_baseline(population_1, population_2, workspace_dir, mask_n
                       %(glm_mat, glm_con))
 
 # run_randomise_sca_baseline(controls_a_qc, patients_a_qc, workspace_a, 'PUTAMEN')
-run_randomise_sca_baseline(controls_a_qc, patients_a_qc, workspace_a, 'CAUDATE')
+# run_randomise_sca_baseline(controls_a_qc, patients_a_qc, workspace_a, 'CAUDATE')
 # run_randomise_sca_baseline(controls_a_qc, patients_a_qc, workspace_a, 'PALLIDUM')
 # run_randomise_sca_baseline(controls_a_qc, patients_a_qc, workspace_a, 'THALAMUS')
-# run_randomise_sca_baseline(controls_a_qc, patients_a_qc, workspace_a, 'FIRST')
+run_randomise_sca_baseline(controls_a_qc, patients_a_qc, workspace_a, 'FIRST')

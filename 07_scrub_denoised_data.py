@@ -56,24 +56,24 @@ def scrub_data(population, workspace_dir):
             print '..Subject has more than 150 Good Frames (3.6 mins)'
             in_frames_string =  str(in_frames[0:150]).replace(" ","")
 
+            # run scrubbing
+            scrub(native_residual_compor, 'RESIDUAL_NATIVE_detrend_compcor_friston_bp_fwhm')
+            scrub(native_residual_wmcsf,  'RESIDUAL_NATIVE_detrend_wmcsf_friston_bp_fwhm')
+            scrub(native_residual_global, 'RESIDUAL_NATIVE_detrend_global_wmcsf_friston_bp_fwhm')
+
+            scrub(mni_residual_compor, 'RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm')
+            scrub(mni_residual_wmcsf,  'RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm')
+            scrub(mni_residual_global, 'RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm')
+
+            scrub(mni_aroma_compcor, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp')
+            scrub(mni_aroma_wmcsf, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp')
+            scrub(mni_aroma_global, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp')
+
+
         else:
             print 'Subject has less than 150 Good frames'
 
-        # run scrubbing
-        scrub(native_residual_compor, 'RESIDUAL_NATIVE_detrend_compcor_friston_bp_fwhm')
-        scrub(native_residual_wmcsf,  'RESIDUAL_NATIVE_detrend_wmcsf_friston_bp_fwhm')
-        scrub(native_residual_global, 'RESIDUAL_NATIVE_detrend_global_wmcsf_friston_bp_fwhm')
-
-        scrub(mni_residual_compor, 'RESIDUAL_MNI2mm_detrend_compcor_friston_bp_fwhm')
-        scrub(mni_residual_wmcsf,  'RESIDUAL_MNI2mm_detrend_wmcsf_friston_bp_fwhm')
-        scrub(mni_residual_global, 'RESIDUAL_MNI2mm_detrend_global_wmcsf_friston_bp_fwhm')
-
-        scrub(mni_aroma_compcor, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_compcor_friston_bp')
-        scrub(mni_aroma_wmcsf, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_wmcsf_friston_bp')
-        scrub(mni_aroma_global, 'RESIDUAL_MNI2mm_FWHM_AROMA_detrend_global_wmcsf_friston_bp')
-
-
 #scrub_data(['BM8X'], workspace_a)
-scrub_data(controls_a, workspace_a)
-scrub_data(patients_a, workspace_a)
+#scrub_data(controls_a, workspace_a)
+#scrub_data(patients_a, workspace_a)
 scrub_data(patients_b, workspace_b)

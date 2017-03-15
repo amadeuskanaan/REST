@@ -98,6 +98,7 @@ def run_anatomical_preprocessing(population, datadir, workspace_dir):
 
         # Separate FIRST Subcortical Masks
 
-run_anatomical_preprocessing(controls_a, controls_datadir_a, workspace_a)
-run_anatomical_preprocessing(patients_a, patients_datadir_a, workspace_a)
-run_anatomical_preprocessing(patients_b, patients_datadir_b, workspace_b)
+run_anatomical_preprocessing(['HCTT'], controls_datadir_a, workspace_a)
+#run_anatomical_preprocessing(controls_a, controls_datadir_a, workspace_a)
+#run_anatomical_preprocessing(patients_a, patients_datadir_a, workspace_a)
+#run_anatomical_preprocessing(patients_b, patients_datadir_b, workspace_b)
