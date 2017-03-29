@@ -222,8 +222,6 @@ def run_functional_transform(population, datadir, workspace_dir, freesurfer_dir)
             os.system('WarpImageMultiTransform 3 freesurfer_insula_anterior_left_rpi_native_space.nii.gz MNI2mm_INSULA_anterior_left.nii.gz -R %s %s %s'%(mni_brain_2mm, warp, affine))
             os.system('fslmaths MNI2mm_INSULA_anterior_left.nii.gz -thr 0.5 -bin ../MNI2mm_FUNC_INSULA_LA.nii.gz')
 
-
-
 run_functional_transform(['HR8T'], controls_datadir_a, workspace_a, freesurfer_dir_a)
 #run_functional_transform(controls_a, controls_datadir_a, workspace_a, freesurfer_dir_a)
 #run_functional_transform(patients_a, patients_datadir_a, workspace_a, freesurfer_dir_a)

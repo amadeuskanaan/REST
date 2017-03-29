@@ -86,31 +86,8 @@ def mkdir_path(path):
         else: raise
 
 
-def create_fsl_mats(afni_aff_1D):
-        import numpy as np
-        import os
-        aff = np.genfromtxt(afni_aff_1D, skip_header=1)
-        cur_dir = os.getcwd()
-        mat_list =[]
 
-        try:
-            os.makedirs(os.path.join(cur_dir, 'MATS'))
-        except OSError:
-            print 'Matrix output folder already created'
-        out_dir  = str(os.path.join(cur_dir, 'MATS'))
 
-        for i, line in enumerate(aff):
-            mat =  np.zeros((4, 4))
-            mat[0] = line[0:4]
-            mat[1] = line[4:8]
-            mat[2] = line[8:12]
-            mat[3] = (0,0,0,1)
-            out_file  = os.path.join('%s/MAT_%s' %(out_dir, '{0:0>4}'.format(i)))
-            np.savetxt( out_file, mat, delimiter = ' ', fmt="%s")
-
-            mat_list.append(out_file)
-
-        return mat_list
 
 
 def calc_friston_twenty_four(mov_par):

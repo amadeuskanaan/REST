@@ -10,6 +10,7 @@ import shutil
 import nipype.interfaces.ants as ants
 
 
+
 def run_functional_denoising(population, datadir, workspace_dir):
 
     for subject in population:

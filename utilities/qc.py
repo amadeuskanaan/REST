@@ -22,7 +22,8 @@ def calc_FD_power(motion_pars):
     fd_out       =  os.path.join(os.getcwd(), 'FD.1D')
     lines        =  open(motion_pars, 'r').readlines()
     rows         = [[float(x) for x in line.split()] for line in lines]
-    cols         = np.array([list(col) for col in zip(*rows)])
+    cols         = np.array([list(col) for col in zip(*rows)])    from matplotlib.gridspec import GridSpec
+
     translations = np.transpose(np.abs(np.diff(cols[0:3, :])))
     rotations    = np.transpose(np.abs(np.diff(cols[3:6, :])))
     FD_power     = np.sum(translations, axis = 1) + (50*3.141/180)*np.sum(rotations, axis =1)
@@ -51,7 +52,6 @@ def calc_DVARS(rest, mask):
     data         = data[mask_data]
     #square root and mean across all timepoints inside mask
     DVARS        = np.sqrt(np.mean(data, axis=0))
-
     np.save(dvars_out, DVARS)
     return dvars_out
 
@@ -117,13 +117,13 @@ def plot_FD(fd1d, mean_FD_distribution, subject,figsize = (8.3,8.3)):
     plt.axhline(threshold, linestyle='dashed', linewidth=2)#,color='r')
 
     ax = plt.subplot(grid[0,-1])
-    sns.distplot(FD_power, vertical = True, ax = ax)
+    sns.distplot(FD_power, vertical = True, ax = ax, hist = False, kde = True, rug = True)
     ax.set_ylim(ylim)
 
     ax= plt.subplot(grid[1,:])
-    sns.distplot(mean_FD_distribution, ax=ax)
+    sns.distplot(mean_FD_distribution, ax=ax, hist = False, kde = True, rug = True, color ='r')
     ax.set_xlabel("%s Mean Frame Dispalcement (over all subjects) [mm]"%subject)
-    label = "MeanFD = %g"%meanFD
+    label = "%s MeanFD = %g"%(subject, meanFD)
     plot_vline(meanFD, label, ax=ax)
 
     png_name = str(os.path.join(os.getcwd(), 'plot_fd_qc.png'))
@@ -188,7 +188,7 @@ def plot_nuisance_residuals(mov_params,
     ax3.set_xticklabels([])
     ax3.grid(True)
     ax3.plot(FD_power)
-    ax3.set_xlim([0, 422])
+    ax3.set_xlim([0, 416])
     plt.axhline(0.2, linestyle='dashed', linewidth=2, color='r')
     ax3.set_ylabel('FD')
     #ax3.yaxis.set_major_locator(FixedLocator((ax3.get_ylim())))
@@ -199,7 +199,7 @@ def plot_nuisance_residuals(mov_params,
     dv = np.load(dvars)
     ax4 = plt.subplot2grid((8,2), (2, 0),  colspan = 2, rowspan =1)
     ax4.plot(dv, color='red')
-    ax4.set_xlim([0, 422])
+    ax4.set_xlim([0, 416])
     ax4.set_ylabel('DVARS')
     ax4.set_xticklabels([])
     ax4.yaxis.set_tick_params(labelsize=5)
@@ -237,6 +237,7 @@ def plot_nuisance_residuals(mov_params,
     ax7.axes.get_xaxis().set_visible(False)
     ax7.axes.get_yaxis().set_visible(False)
 
+
     # aroma gobal
     n5  = timeseries(aroma_gl, func_gm)
     ax7 = plt.subplot2grid((8,2), (7,0),  colspan = 2, rowspan =1)
@@ -244,9 +245,9 @@ def plot_nuisance_residuals(mov_params,
     ax7.set_title('AROMA + Detrend + Global + WMCSF + Friston 24 + BP', fontsize = 8)
     ax7.axes.get_xaxis().set_visible(False)
     ax7.axes.get_yaxis().set_visible(False)
-
     png_name = str(os.path.join(os.getcwd(), out_name))
     plt.savefig(png_name, dpi=190, bbox_inches='tight')
+
     plt.close()
 
     return fig
@@ -311,7 +312,7 @@ def plot_mosaic(nifti_file, output_name , title=None, overlay_mask = None, figsi
     fig.savefig(output_name)
     return fig
 
-def _get_values_inside_a_mask(main_file, mask_file):
+def get_values_inside_a_mask(main_file, mask_file):
     main_nii = nb.load(main_file)
     main_data = main_nii.get_data()
     nan_mask = np.logical_not(np.isnan(main_data))
@@ -323,13 +324,13 @@ def _get_values_inside_a_mask(main_file, mask_file):
 def get_median_distribution(main_files, mask_files):
     medians = []
     for main_file, mask_file in zip(main_files, mask_files):
-        med = np.median(_get_values_inside_a_mask(main_file, mask_file))
+        med = np.median(get_values_inside_a_mask(main_file, mask_file))
         medians.append(med)
     return medians
 
-def plot_distrbution_of_values(main_file, mask_file, xlabel, outname, distribution=None, xlabel2=None, figsize=(11.7,8.3)):
+def plot_distrbution_of_values(main_file, mask_file, xlabel, outname, color= None, distribution=None, xlabel2=None, figsize=(11.7,8.3)):
 
-    data = _get_values_inside_a_mask(main_file, mask_file)
+    data = get_values_inside_a_mask(main_file, mask_file)
 
     fig = plt.figure(figsize=figsize)
     fig.subplots_adjust(wspace=0.3)
@@ -337,11 +338,11 @@ def plot_distrbution_of_values(main_file, mask_file, xlabel, outname, distributi
 
     gs = GridSpec(2, 1)
     ax = plt.subplot(gs[0, 0])
-    sns.distplot(data.astype(np.double), kde=False, bins=100, ax=ax)
+    sns.distplot(data.astype(np.double), kde=False, bins=100, ax=ax, color = color )
     ax.set_xlabel(xlabel)
 
     ax = plt.subplot(gs[1, 0])
-    sns.distplot(np.array(distribution).astype(np.double), ax=ax)
+    sns.distplot(np.array(distribution).astype(np.double), ax=ax, hist = False, kde = True, rug = True)
     cur_val = np.median(data)
     label = "%g"%cur_val
     plot_vline(cur_val, label, ax=ax)
@@ -465,7 +466,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax1.imshow(np.rot90(underlay[:,coords[1]-10,:], 3), matplotlib.cm.gray)
     ax1.imshow(np.rot90(overlay[:,coords[1]-10,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.5, origin='lower')
     ax1.set_xlim(23, 65)
-    ax1.set_ylim(15,50)
+    ax1.set_ylim(10,45)
     ax1.axes.get_yaxis().set_visible(False)
     ax1.axes.get_xaxis().set_visible(False)
 
@@ -474,7 +475,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax3.imshow(np.rot90(underlay[:,coords[1]-7,:], 3), matplotlib.cm.gray)
     ax3.imshow(np.rot90(overlay[:,coords[1]-7,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.5, origin='lower')
     ax3.set_xlim(23, 65)
-    ax3.set_ylim(15,50)
+    ax3.set_ylim(10,45)
     ax3.axes.get_yaxis().set_visible(False)
     ax3.axes.get_xaxis().set_visible(False)
 
@@ -484,7 +485,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax3.imshow(np.rot90(underlay[:,coords[1]-3,:], 3), matplotlib.cm.gray)
     ax3.imshow(np.rot90(overlay[:,coords[1]-3,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.5, origin='lower')
     ax3.set_xlim(23, 65)
-    ax3.set_ylim(15,50)
+    ax3.set_ylim(10,45)
     ax3.axes.get_yaxis().set_visible(False)
     ax3.axes.get_xaxis().set_visible(False)
 
@@ -494,7 +495,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax4.imshow(np.rot90(underlay[:,coords[1],:], 3), matplotlib.cm.gray)
     ax4.imshow(np.rot90(overlay[:,coords[1],:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.5, origin='lower')
     ax4.set_xlim(23, 65)
-    ax4.set_ylim(15,50)
+    ax4.set_ylim(10,45)
     ax4.axes.get_yaxis().set_visible(False)
     ax4.axes.get_xaxis().set_visible(False)
 
@@ -503,7 +504,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax5.imshow(np.rot90(underlay[:,coords[1]+3,:], 3), matplotlib.cm.gray)
     ax5.imshow(np.rot90(overlay[:,coords[1]+3,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.4, origin='lower')
     ax5.set_xlim(23, 65)
-    ax5.set_ylim(15,50)
+    ax5.set_ylim(10,45)
     ax5.axes.get_yaxis().set_visible(False)
     ax5.axes.get_xaxis().set_visible(False)
 
@@ -512,7 +513,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax6.imshow(np.rot90(underlay[:,coords[1]+5,:], 3), matplotlib.cm.gray)
     ax6.imshow(np.rot90(overlay[:,coords[1]+5,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.4, origin='lower')
     ax6.set_xlim(23, 65)
-    ax6.set_ylim(15,50)
+    ax6.set_ylim(10,45)
     ax6.axes.get_yaxis().set_visible(False)
     ax6.axes.get_xaxis().set_visible(False)
 
@@ -521,7 +522,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax7.imshow(np.rot90(underlay[:,coords[1]+7,:], 3), matplotlib.cm.gray)
     ax7.imshow(np.rot90(overlay[:,coords[1]+7,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.4, origin='lower')
     ax7.set_xlim(23, 65)
-    ax7.set_ylim(15,50)
+    ax7.set_ylim(10,45)
     ax7.axes.get_yaxis().set_visible(False)
     ax7.axes.get_xaxis().set_visible(False)
 
@@ -530,7 +531,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax8.imshow(np.rot90(underlay[:,coords[1]+10,:], 3), matplotlib.cm.gray)
     ax8.imshow(np.rot90(overlay[:,coords[1]+10,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.4, origin='lower')
     ax8.set_xlim(23, 65)
-    ax8.set_ylim(15,50)
+    ax8.set_ylim(10,45)
     ax8.axes.get_yaxis().set_visible(False)
     ax8.axes.get_xaxis().set_visible(False)
 
@@ -539,7 +540,7 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
     ax9.imshow(np.rot90(underlay[:,coords[1]+12,:], 3), matplotlib.cm.gray)
     ax9.imshow(np.rot90(overlay[:,coords[1]+12,:],3 ) , matplotlib.cm.rainbow_r, alpha = 0.4, origin='lower')
     ax9.set_xlim(23, 65)
-    ax9.set_ylim(15,50)
+    ax9.set_ylim(10,45)
     ax9.axes.get_yaxis().set_visible(False)
     ax9.axes.get_xaxis().set_visible(False)
 
@@ -548,3 +549,25 @@ def plot_3d_overlay(underlay_file, overlay_file, out_filename, dpi):
 
 
     fig.savefig(out_filename, dpi=dpi, bbox_inches='tight')
+
+
+def get_outlier(subject_vector, population_vector):
+    sub_mean = np.mean(subject_vector)
+    pop_mean = np.mean(population_vector)
+    pop_sd   = np.std(population_vector)
+
+    upper_limit = pop_mean +  3 * pop_sd
+    lower_limit = pop_mean -  3 * pop_sd
+
+    if sub_mean > upper_limit or sub_mean < lower_limit:
+        return 'Rejected'
+    else:
+        return 'Accepted'
+
+
+
+
+
+
+
+
